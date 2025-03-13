@@ -1,27 +1,92 @@
-# flip-card-game
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>簡單翻牌遊戲</title>
+    <title>記憶翻牌遊戲</title>
     <style>
-        body { text-align: center; font-family: Arial, sans-serif; }
-        .game-container { display: grid; grid-template-columns: repeat(4, 100px); grid-gap: 10px; justify-content: center; }
-        .card { width: 100px; height: 100px; background: gray; font-size: 24px; display: flex; align-items: center; justify-content: center; cursor: pointer; }
-        .matched { background: lightgreen; pointer-events: none; }
+        /* 設定整體頁面樣式，確保遊戲居中 */
+        body { 
+            text-align: center; 
+            font-family: Arial, sans-serif; 
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0; /* 避免瀏覽器預設 margin */
+            padding: 20px; /* 增加上下間距 */
+            background-color: #f8f8f8; /* 背景色 */
+        }
+
+        h2, p {
+            margin: 10px 0; /* 控制標題和文字間距 */
+        }
+
+        /* 遊戲容器 */
+        .game-container { 
+            display: grid; 
+            grid-template-columns: repeat(4, 100px); /* 4列 */
+            grid-template-rows: repeat(4, 100px); /* 4行 */
+            grid-gap: 15px; /* 增加間距，防止牌疊在一起 */
+            justify-content: center; /* 水平置中 */
+            margin-top: 20px; /* 上方間距 */
+            padding: 10px; /* 內部間距 */
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1); /* 增加立體感 */
+        }
+
+        /* 翻牌樣式 */
+        .card { 
+            width: 100px; 
+            height: 100px; 
+            background: gray; 
+            font-size: 24px; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            cursor: pointer; 
+            border-radius: 8px; 
+            transition: background 0.3s, transform 0.2s;
+        }
+
+        /* 當配對成功時 */
+        .matched { 
+            background: lightgreen; 
+            pointer-events: none; 
+            transform: scale(1.1); /* 增加配對成功時的效果 */
+        }
+
+        /* 響應式設計，適應小螢幕（手機） */
+        @media (max-width: 500px) {
+            .game-container {
+                grid-template-columns: repeat(4, 80px); /* 手機版變成 4 列 */
+                grid-template-rows: repeat(4, 80px);
+                grid-gap: 10px;
+            }
+            .card {
+                width: 80px;
+                height: 80px;
+                font-size: 20px;
+            }
+        }
     </style>
 </head>
 <body>
 
-<h2>翻牌記憶遊戲</h2>
+<h2>🎴 記憶翻牌遊戲</h2>
 <p>找到所有配對的牌！</p>
 <div class="game-container" id="gameBoard"></div>
 <p>✅ 答對次數：<span id="score">0</span></p>
 
 <script>
-    // 設定卡片圖案
-    const cards = ["🍎", "🍎", "🍌", "🍌", "🍇", "🍇", "🍉", "🍉"];
+    // 設定卡片圖案（16 張牌）
+    const cards = [
+        "🍎", "🍎", "🍌", "🍌", "🍇", "🍇", "🍉", "🍉", 
+        "🍓", "🍓", "🍍", "🍍", "🥝", "🥝", "🍒", "🍒"
+    ];
+    
     let shuffledCards = cards.sort(() => 0.5 - Math.random());
     let firstCard = null, secondCard = null;
     let lockBoard = false;
