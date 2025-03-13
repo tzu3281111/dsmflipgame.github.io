@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>記憶翻牌遊戲</title>
     <style>
-        /* 設定整體頁面樣式，確保遊戲居中 */
         body { 
             text-align: center; 
             font-family: Arial, sans-serif; 
@@ -14,30 +13,26 @@
             align-items: center;
             justify-content: center;
             height: 100vh;
-            margin: 0; /* 避免瀏覽器預設 margin */
-            padding: 20px; /* 增加上下間距 */
-            background-color: #f8f8f8; /* 背景色 */
+            margin: 0;
+            padding: 20px;
+            background-color: #f8f8f8;
         }
 
-        h2, p {
-            margin: 10px 0; /* 控制標題和文字間距 */
-        }
+        h2, p { margin: 10px 0; }
 
-        /* 遊戲容器 */
         .game-container { 
             display: grid; 
-            grid-template-columns: repeat(4, 100px); /* 4列 */
-            grid-template-rows: repeat(4, 100px); /* 4行 */
-            grid-gap: 15px; /* 增加間距，防止牌疊在一起 */
-            justify-content: center; /* 水平置中 */
-            margin-top: 20px; /* 上方間距 */
-            padding: 10px; /* 內部間距 */
+            grid-template-columns: repeat(4, 100px); 
+            grid-template-rows: repeat(4, 100px); 
+            grid-gap: 15px;
+            justify-content: center;
+            margin-top: 20px;
+            padding: 10px;
             background: white;
             border-radius: 10px;
-            box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1); /* 增加立體感 */
+            box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
         }
 
-        /* 翻牌樣式 */
         .card { 
             width: 100px; 
             height: 100px; 
@@ -51,17 +46,35 @@
             transition: background 0.3s, transform 0.2s;
         }
 
-        /* 當配對成功時 */
         .matched { 
             background: lightgreen; 
             pointer-events: none; 
-            transform: scale(1.1); /* 增加配對成功時的效果 */
+            transform: scale(1.1);
         }
 
-        /* 響應式設計，適應小螢幕（手機） */
+        .hidden { display: none; } /* 隱藏元素 */
+        .result { font-size: 24px; font-weight: bold; margin-top: 20px; }
+        .btn {
+            padding: 10px 20px;
+            font-size: 16px;
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 10px;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .btn:hover {
+            background: #0056b3;
+        }
+
+        /* 響應式設計 */
         @media (max-width: 500px) {
             .game-container {
-                grid-template-columns: repeat(4, 80px); /* 手機版變成 4 列 */
+                grid-template-columns: repeat(4, 80px); 
                 grid-template-rows: repeat(4, 80px);
                 grid-gap: 10px;
             }
@@ -75,13 +88,21 @@
 </head>
 <body>
 
-<h2>🎴 記憶翻牌遊戲</h2>
-<p>找到所有配對的牌！</p>
+<h2 id="title">🎴 記憶翻牌遊戲</h2>
+<p id="instruction">找到所有配對的牌！</p>
+
 <div class="game-container" id="gameBoard"></div>
 <p>✅ 答對次數：<span id="score">0</span></p>
 
+<!-- 成功畫面 -->
+<div id="completionScreen" class="hidden">
+    <p class="result">🎉 您全部完成了!!</p>
+    <p id="timeTaken"></p>
+    <button class="btn" onclick="restartGame()">重新開始</button>
+    <a class="btn" href="https://docs.google.com/forms/d/e/1FAIpQLSfRi-g1cbLSbNNXCPZ20XCLoS3WWEuIizNDSZ1OrwBW-OQoqg/viewform?usp=header" target="_blank">填寫問卷</a>
+</div>
+
 <script>
-    // 設定卡片圖案（16 張牌）
     const cards = [
         "🍎", "🍎", "🍌", "🍌", "🍇", "🍇", "🍉", "🍉", 
         "🍓", "🍓", "🍍", "🍍", "🥝", "🥝", "🍒", "🍒"
@@ -91,11 +112,13 @@
     let firstCard = null, secondCard = null;
     let lockBoard = false;
     let score = 0;
+    let startTime = new Date(); // 記錄開始時間
 
     const gameBoard = document.getElementById("gameBoard");
     const scoreDisplay = document.getElementById("score");
+    const completionScreen = document.getElementById("completionScreen");
+    const timeTakenDisplay = document.getElementById("timeTaken");
 
-    // 建立卡片
     shuffledCards.forEach((emoji, index) => {
         const card = document.createElement("div");
         card.classList.add("card");
@@ -106,7 +129,6 @@
         gameBoard.appendChild(card);
     });
 
-    // 翻牌邏輯
     function flipCard() {
         if (lockBoard) return;
         this.innerHTML = this.dataset.emoji;
@@ -125,9 +147,8 @@
                     score++;
                     scoreDisplay.textContent = score;
 
-                    // 當所有配對成功後，跳轉到 Google 表單記錄答對次數
                     if (score === cards.length / 2) {
-                        sendScoreToGoogleForm(score);
+                        endGame(); // 遊戲完成時執行
                     }
                 } else {
                     firstCard.innerHTML = "?";
@@ -141,10 +162,20 @@
         }
     }
 
-    // 當遊戲結束時，跳轉到 Google 表單
-    function sendScoreToGoogleForm(score) {
-        const googleFormUrl = "你的 Google 表單連結";
-        window.location.href = googleFormUrl + "?entry.1234567890=" + score;
+    function endGame() {
+        let endTime = new Date();
+        let timeTaken = Math.round((endTime - startTime) / 1000); // 計算遊戲耗時（秒）
+        
+        // 顯示完成畫面
+        gameBoard.classList.add("hidden");
+        document.getElementById("title").classList.add("hidden");
+        document.getElementById("instruction").classList.add("hidden");
+        completionScreen.classList.remove("hidden");
+        timeTakenDisplay.innerHTML = `⏳ 耗時：${timeTaken} 秒`;
+    }
+
+    function restartGame() {
+        location.reload(); // 重新載入頁面
     }
 </script>
 
